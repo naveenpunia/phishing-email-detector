@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhishGuard | Email Threat Analysis & Awareness Hub</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Main Style Sheet -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="glow-bg"></div>
+    
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="app-sidebar">
+            <div class="sidebar-brand">
+                <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <path d="M12 8v4M12 16h.01"/>
+                </svg>
+                <span class="brand-text">Phish<span class="brand-accent">Guard</span></span>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-view="dashboard">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    Dashboard
+                </button>
+                <button class="nav-item" data-view="analyze">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                    Analyze Email
+                </button>
+                <button class="nav-item" data-view="history">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    History Log
+                </button>
+                <button class="nav-item" data-view="quiz">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    Awareness Quiz
+                </button>
+                <button class="nav-item" data-view="awareness">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                    </svg>
+                    Security Guides
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button id="theme-toggle" class="theme-toggle-btn">
+                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                    </svg>
+                    <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <span class="theme-text">Toggle Theme</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="app-main">
+            <header class="main-header">
+                <div class="header-title">
+                    <h1 id="view-title">Dashboard Overview</h1>
+                    <p id="view-subtitle">Analyzing cyber threats & statistics</p>
+                </div>
+                <div class="header-actions">
+                    <div class="status-indicator">
+                        <span class="pulse-green"></span>
+                        Heuristic Engine: Online
+                    </div>
+                </div>
+            </header>
+
+            <div class="view-container">
+                <!-- 1. DASHBOARD VIEW -->
+                <section id="view-dashboard" class="view-section">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <span class="stat-label">Total Emails Analyzed</span>
+                                <span class="stat-value" id="stat-total">0</span>
+                            </div>
+                            <div class="stat-icon blue">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <span class="stat-label">Average Risk Index</span>
+                                <span class="stat-value" id="stat-avg-score">0%</span>
+                            </div>
+                            <div class="stat-icon orange">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <span class="stat-label">High Risk Phishing</span>
+                                <span class="stat-value" id="stat-high-risk">0</span>
+                            </div>
+                            <div class="stat-icon red">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <span class="stat-label">Safe & Warning Logs</span>
+                                <span class="stat-value" id="stat-safe-warning">0 / 0</span>
+                            </div>
+                            <div class="stat-icon green">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-details-grid">
+                        <!-- Chart Card -->
+                        <div class="card chart-card">
+                            <div class="card-header">
+                                <h3>Threat Levels Analysis Distribution</h3>
+                            </div>
+                            <div class="chart-container">
+                                <div class="bar-chart">
+                                    <div class="bar-group">
+                                        <div class="bar-bar red" id="bar-high" style="height: 0%"></div>
+                                        <span class="bar-label">High Risk</span>
+                                    </div>
+                                    <div class="bar-group">
+                                        <div class="bar-bar orange" id="bar-warn" style="height: 0%"></div>
+                                        <span class="bar-label">Warning</span>
+                                    </div>
+                                    <div class="bar-group">
+                                        <div class="bar-bar green" id="bar-safe" style="height: 0%"></div>
+                                        <span class="bar-label">Safe</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Leaderboard Card -->
+                        <div class="card leaderboard-card">
+                            <div class="card-header">
+                                <h3>Quiz Top Scorer Leaderboard</h3>
+                                <button class="btn-text-action" id="nav-to-quiz-btn">Take Quiz</button>
+                            </div>
+                            <div class="leaderboard-list" id="leaderboard-list">
+                                <div class="empty-list">No scores posted yet. Be the first to score!</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. ANALYZE EMAIL VIEW -->
+                <section id="view-analyze" class="view-section hidden">
+                    <div class="analysis-split">
+                        <!-- Left Panel: Input Fields -->
+                        <div class="card input-card">
+                            <div class="card-header">
+                                <h3>Scan Email Package</h3>
+                            </div>
+                            <form id="analyze-form">
+                                <div class="form-group">
+                                    <label for="sender-input">Sender Details</label>
+                                    <input type="text" id="sender-input" placeholder="e.g., PayPal Security <support@paypaI-updates.com>" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="subject-input">Subject Line</label>
+                                    <input type="text" id="subject-input" placeholder="e.g., Security Verification Required Immediately!" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="attachments-input">Attachments (Optional)</label>
+                                    <input type="text" id="attachments-input" placeholder="e.g., invoice.pdf, update.exe (comma separated)">
+                                </div>
+                                <div class="form-group">
+                                    <label for="body-input">Email Content Body</label>
+                                    <textarea id="body-input" rows="8" placeholder="Paste the full email text here..." required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-block" id="analyze-submit-btn">
+                                    <span class="btn-text">ANALYZE THREATS</span>
+                                    <span class="loader-spinner hidden"></span>
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Right Panel: Results View -->
+                        <div class="card results-card empty" id="analysis-results-placeholder">
+                            <div class="results-empty-state">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="64" height="64">
+                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                                    <line x1="12" y1="22.08" x2="12" y2="12"/>
+                                </svg>
+                                <h4>Ready for Inspection</h4>
+                                <p>Input email details on the left and click analyze to start heuristic scans.</p>
+                            </div>
+                        </div>
+
+                        <!-- Actual Results Card (Hidden by default) -->
+                        <div class="card results-card hidden" id="analysis-results-panel">
+                            <div class="results-header">
+                                <div class="results-badge" id="results-classification">HIGH RISK</div>
+                                <div class="risk-score-pill">Risk Score: <span id="results-score">0</span>/100</div>
+                            </div>
+                            
+                            <div class="results-scroll-area">
+                                <!-- Suspicious Highlights -->
+                                <div class="result-box highlighted-body-container">
+                                    <h4>Inspected Email Content (with Warnings)</h4>
+                                    <div class="highlighted-body-text" id="results-highlighted-body">
+                                        <!-- Highlighted body content injected here -->
+                                    </div>
+                                    <div class="marker-legend">
+                                        <span class="legend-item"><span class="legend-dot red"></span>Urgency</span>
+                                        <span class="legend-item"><span class="legend-dot orange"></span>Credentials</span>
+                                        <span class="legend-item"><span class="legend-dot blue"></span>Suspicious Link</span>
+                                        <span class="legend-item"><span class="legend-dot pink"></span>Grammar Typo</span>
+                                    </div>
+                                </div>
+
+                                <!-- Findings breakdown list -->
+                                <div class="result-box findings-container">
+                                    <h4>Suspicious Elements Found</h4>
+                                    <div class="findings-list" id="results-findings-list">
+                                        <!-- Findings items injected here -->
+                                    </div>
+                                </div>
+
+                                <!-- Actionable recommendations -->
+                                <div class="result-box recommendations-container">
+                                    <h4>ShieldGuard Security Guidance</h4>
+                                    <ul class="recommendations-list" id="results-recommendations-list">
+                                        <!-- Recommendations injected here -->
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <button class="btn btn-secondary btn-block" id="new-analysis-btn">NEW ANALYSIS</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 3. HISTORY LOG VIEW -->
+                <section id="view-history" class="view-section hidden">
+                    <div class="card history-table-card">
+                        <div class="card-header">
+                            <h3>Scans Database Log</h3>
+                            <button class="btn-text-action" id="refresh-history-btn">Refresh</button>
+                        </div>
+                        <div class="table-container">
+                            <table class="history-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date/Time</th>
+                                        <th>Sender Details</th>
+                                        <th>Subject Line</th>
+                                        <th>Score</th>
+                                        <th>Classification</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-table-body">
+                                    <!-- Table records injected here -->
+                                </tbody>
+                            </table>
+                            <div class="empty-table-state hidden" id="empty-history-state">
+                                <p>No previous scans found in database.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. AWARENESS QUIZ VIEW -->
+                <section id="view-quiz" class="view-section hidden">
+                    <div class="quiz-container">
+                        <!-- Welcome Screen -->
+                        <div class="card quiz-card" id="quiz-start-card">
+                            <div class="quiz-icon-header">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="80" height="80">
+                                    <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                                </svg>
+                            </div>
+                            <h2>Cybersecurity Awareness Quiz</h2>
+                            <p>Test your ability to spot sophisticated phishing attacks! Enter your username to begin and post your score to the global leaderboards.</p>
+                            
+                            <div class="form-group quiz-user-group">
+                                <input type="text" id="quiz-username" placeholder="Enter username (e.g. CyberSecPro)" required>
+                                <button class="btn btn-primary" id="start-quiz-btn">START QUIZ</button>
+                            </div>
+                        </div>
+
+                        <!-- Question Screen -->
+                        <div class="card quiz-card hidden" id="quiz-question-card">
+                            <div class="quiz-progress-bar-container">
+                                <div class="quiz-progress-fill" id="quiz-progress-fill" style="width: 20%"></div>
+                            </div>
+                            <div class="quiz-question-meta">
+                                <span class="badge" id="quiz-question-number">Question 1 of 5</span>
+                            </div>
+                            
+                            <h3 id="quiz-question-text">Question content goes here?</h3>
+                            
+                            <div class="quiz-options-list" id="quiz-options-list">
+                                <!-- Options injected here -->
+                            </div>
+                            
+                            <button class="btn btn-primary btn-block hidden" id="next-question-btn">NEXT QUESTION</button>
+                        </div>
+
+                        <!-- Score Screen -->
+                        <div class="card quiz-card hidden" id="quiz-score-card">
+                            <h2 class="score-title">Quiz Completed!</h2>
+                            
+                            <div class="final-score-gauge">
+                                <span id="final-score-val">0</span> / <span id="final-score-total">5</span>
+                            </div>
+                            
+                            <h3 id="score-evaluation-text">Great effort! Keep practicing your cybersecurity rules.</h3>
+                            
+                            <div class="leaderboard-summary-box">
+                                <h4>Global High Scores</h4>
+                                <div class="leaderboard-list-mini" id="quiz-mini-leaderboard">
+                                    <!-- Leaderboard list -->
+                                </div>
+                            </div>
+                            
+                            <div class="quiz-actions">
+                                <button class="btn btn-primary" id="retry-quiz-btn">TAKE AGAIN</button>
+                                <button class="btn btn-secondary" id="exit-quiz-btn">RETURN TO DASHBOARD</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 5. SECURITY GUIDES VIEW -->
+                <section id="view-awareness" class="view-section hidden">
+                    <div class="guides-grid">
+                        <div class="card guide-card">
+                            <div class="guide-header">
+                                <span class="guide-num">01</span>
+                                <h3>Domain Spoofing Tactics</h3>
+                            </div>
+                            <p>Phishing attackers frequently spoof domains to make emails appear as though they originate from trusted entities.</p>
+                            <div class="guide-callout">
+                                <strong>Common Trick:</strong> Character replacements (Look-alike domains), e.g., using a capital <code>I</code> or number <code>1</code> instead of a lowercase <code>l</code> (such as <code>paypaI.com</code> vs <code>paypal.com</code>).
+                            </div>
+                            <h5>Security Rule:</h5>
+                            <p class="rule-text">Never click links inside emails displaying warnings about urgent billing revisions without navigating to the website manually through your browser URL bar.</p>
+                        </div>
+
+                        <div class="card guide-card">
+                            <div class="guide-header">
+                                <span class="guide-num">02</span>
+                                <h3>Link Hijacking & Mismatches</h3>
+                            </div>
+                            <p>The label text of a link does not have to match the actual destination address. Attackers write authentic URLs as text labels but route the click elsewhere.</p>
+                            <div class="guide-callout">
+                                <strong>Common Trick:</strong> Displaying <code>https://bankofamerica.com</code> while pointing the hyperlink href to <code>http://boa-login-credentials-verify.xyz</code>.
+                            </div>
+                            <h5>Security Rule:</h5>
+                            <p class="rule-text">Hover your cursor over the link before clicking. Look at the status bar at the bottom of your window to confirm the domain matches the brand exactly.</p>
+                        </div>
+
+                        <div class="card guide-card">
+                            <div class="guide-header">
+                                <span class="guide-num">03</span>
+                                <h3>Payload Attachments</h3>
+                            </div>
+                            <p>Opening attachments from unknown sources is the primary route for malware and ransomware payloads.</p>
+                            <div class="guide-callout">
+                                <strong>Common Trick:</strong> Double file extensions like <code>invoice.pdf.exe</code>, or macro-enabled documents like <code>invoice.xlsm</code> which download malware.
+                            </div>
+                            <h5>Security Rule:</h5>
+                            <p class="rule-text">Never open files ending in double extensions, and avoid enabling macros for attachments. Keep your system antivirus enabled and updated.</p>
+                        </div>
+
+                        <div class="card guide-card">
+                            <div class="guide-header">
+                                <span class="guide-num">04</span>
+                                <h3>SPF / DKIM Checks</h3>
+                            </div>
+                            <p>Sender Policy Framework (SPF) and DomainKeys Identified Mail (DKIM) are authentication tools that confirm an email actually came from the domain owner.</p>
+                            <div class="guide-callout">
+                                <strong>Common Trick:</strong> Bypassing validation with free email hosting services to mimic branding displays (e.g. sending from <code>apple-support@gmail.com</code>).
+                            </div>
+                            <h5>Security Rule:</h5>
+                            <p class="rule-text">Verify that official correspondence from institutional brands (Netflix, Apple, Chase, etc.) matches their domain handles directly (not using generic free accounts).</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Main Frontend Script -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
