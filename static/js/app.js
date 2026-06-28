@@ -1,5 +1,5 @@
 /**
- * PhishGuard - Frontend Logic & Dashboard Controller
+ * MailArmor - Frontend Logic & Dashboard Controller
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -172,6 +172,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const subjectInput = document.getElementById('subject-input');
     const attachmentsInput = document.getElementById('attachments-input');
     const bodyInput = document.getElementById('body-input');
+    const uploadedFilesList = document.getElementById('uploaded-files-list');
+    const uploadLabelText = document.getElementById('upload-label-text');
+
+    function resetAttachments() {
+        attachmentsInput.value = '';
+        uploadedFilesList.innerHTML = '';
+        uploadLabelText.textContent = 'Select email attachments...';
+    }
+
+    attachmentsInput.addEventListener('change', () => {
+        const files = Array.from(attachmentsInput.files);
+        if (files.length === 0) {
+            resetAttachments();
+            return;
+        }
+        
+        uploadLabelText.textContent = `${files.length} file(s) selected`;
+        uploadedFilesList.innerHTML = files.map(file => {
+            const sizeKB = (file.size / 1024).toFixed(1);
+            return `
+                <div class="file-item" style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); margin-top: 8px; background: rgba(255,255,255,0.02); padding: 6px 12px; border-radius: 8px; border: 1px solid var(--bg-card-border);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="color: var(--accent-blue); flex-shrink: 0;">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    <span style="font-weight: 500; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 240px;">${escapeHtml(file.name)}</span>
+                    <span style="color: var(--text-muted); font-size: 11px; flex-shrink: 0;">(${sizeKB} KB)</span>
+                </div>
+            `;
+        }).join('');
+    });
 
     analyzeForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -181,10 +212,12 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtnText.classList.add('hidden');
         submitBtnSpinner.classList.remove('hidden');
 
+        const attachmentNames = Array.from(attachmentsInput.files).map(file => file.name).join(', ');
+
         const payload = {
             sender: senderInput.value.trim(),
             subject: subjectInput.value.trim(),
-            attachments: attachmentsInput.value.trim(),
+            attachments: attachmentNames,
             body: bodyInput.value.trim()
         };
 
@@ -260,6 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Reset Analysis Panel button
     document.getElementById('new-analysis-btn').addEventListener('click', () => {
         analyzeForm.reset();
+        resetAttachments();
         resultsPanel.classList.add('hidden');
         resultsPlaceholder.classList.remove('hidden');
     });
@@ -320,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Populate form input boxes
         senderInput.value = record.sender;
         subjectInput.value = record.subject;
-        attachmentsInput.value = ''; // Reset attachments
+        resetAttachments(); // Reset file upload picker
         bodyInput.value = record.original_body;
 
         // Render details

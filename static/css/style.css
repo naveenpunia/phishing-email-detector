@@ -1,4 +1,4 @@
-/* PhishGuard Stylesheet - Premium Web Application Stylesheet */
+/* MailArmor Stylesheet - Premium Web Application Stylesheet */
 
 :root[data-theme="dark"] {
     --bg-body: #080c14;
@@ -127,15 +127,29 @@ body {
     color: var(--accent-blue);
 }
 
+.brand-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
 .brand-text {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 700;
+    line-height: 1.1;
     letter-spacing: -0.5px;
 }
 
 .brand-accent {
     color: var(--accent-blue);
+}
+
+.brand-subtext {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-top: 2px;
 }
 
 .sidebar-nav {
@@ -1159,4 +1173,47 @@ mark.flag-grammar {
     .quiz-actions {
         flex-direction: column;
     }
+}
+
+/* File Upload Premium Component Styles */
+.file-upload-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.file-upload-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-input);
+    border: 1px dashed var(--input-border);
+    color: var(--text-secondary);
+    padding: 14px 20px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.25s ease;
+}
+
+.file-upload-label:hover {
+    border-color: var(--accent-blue);
+    background-color: rgba(var(--accent-blue-rgb), 0.03);
+    color: var(--text-primary);
+}
+
+.file-upload-label svg {
+    color: var(--accent-blue);
+    transition: transform 0.2s ease;
+}
+
+.file-upload-label:hover svg {
+    transform: translateY(-2px);
+}
+
+.file-list {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }

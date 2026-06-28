@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhishGuard | Email Threat Analysis & Awareness Hub</title>
+    <title>MailArmor | Email Threat Analysis & Awareness Hub</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,11 +18,15 @@
         <!-- Sidebar Navigation -->
         <aside class="app-sidebar">
             <div class="sidebar-brand">
-                <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                    <path d="M12 8v4M12 16h.01"/>
+                <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 9V6a4 4 0 0 1 8 0v3" />
+                    <rect x="3" y="9" width="18" height="12" rx="2" ry="2" />
+                    <path d="M3 11l9 6 9-6" />
                 </svg>
-                <span class="brand-text">Phish<span class="brand-accent">Guard</span></span>
+                <div class="brand-info">
+                    <span class="brand-text">Mail<span class="brand-accent">Armor</span></span>
+                    <span class="brand-subtext">Email Security Analyzer</span>
+                </div>
             </div>
             
             <nav class="sidebar-nav">
@@ -194,10 +198,19 @@
                                     <label for="subject-input">Subject Line</label>
                                     <input type="text" id="subject-input" placeholder="e.g., Security Verification Required Immediately!" required>
                                 </div>
-                                <div class="form-group">
-                                    <label for="attachments-input">Attachments (Optional)</label>
-                                    <input type="text" id="attachments-input" placeholder="e.g., invoice.pdf, update.exe (comma separated)">
-                                </div>
+                                 <div class="form-group">
+                                     <label>Attachments (Optional)</label>
+                                     <div class="file-upload-wrapper">
+                                         <label for="attachments-input" class="file-upload-label">
+                                             <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="margin-right: 8px; vertical-align: middle;">
+                                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                                             </svg>
+                                             <span id="upload-label-text">Select email attachments...</span>
+                                         </label>
+                                         <input type="file" id="attachments-input" multiple style="display: none;">
+                                     </div>
+                                     <div class="file-list" id="uploaded-files-list"></div>
+                                 </div>
                                 <div class="form-group">
                                     <label for="body-input">Email Content Body</label>
                                     <textarea id="body-input" rows="8" placeholder="Paste the full email text here..." required></textarea>
@@ -254,7 +267,7 @@
 
                                 <!-- Actionable recommendations -->
                                 <div class="result-box recommendations-container">
-                                    <h4>ShieldGuard Security Guidance</h4>
+                                    <h4>MailArmor Security Guidance</h4>
                                     <ul class="recommendations-list" id="results-recommendations-list">
                                         <!-- Recommendations injected here -->
                                     </ul>
