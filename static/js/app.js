@@ -76,32 +76,62 @@ document.addEventListener('DOMContentLoaded', () => {
         switchView('quiz');
     });
 
-    // Dashboard Data loading
-    async function loadDashboardStats() {
-        try {
-            const response = await fetch('/api/stats');
-            const data = await response.json();
-            
-            document.getElementById('stat-total').textContent = data.total_scans;
-            document.getElementById('stat-avg-score').textContent = `${data.avg_score}%`;
-            document.getElementById('stat-high-risk').textContent = data.high_risk_count;
-            document.getElementById('stat-safe-warning').textContent = `${data.safe_count} / ${data.warning_count}`;
+    // Device-Based LocalStorage History Helpers
+    function getHistory() {
+        const history = localStorage.getItem('email_scan_history');
+        return history ? JSON.parse(history) : [];
+    }
 
-            // Calculate heights for threat distribution bar charts
-            const total = data.total_scans || 1;
-            const highPct = (data.high_risk_count / total) * 100;
-            const warnPct = (data.warning_count / total) * 100;
-            const safePct = (data.safe_count / total) * 100;
+    function saveHistory(history) {
+        localStorage.setItem('email_scan_history', JSON.stringify(history));
+    }
 
-            document.getElementById('bar-high').style.height = `${Math.max(highPct, 5)}%`;
-            document.getElementById('bar-warn').style.height = `${Math.max(warnPct, 5)}%`;
-            document.getElementById('bar-safe').style.height = `${Math.max(safePct, 5)}%`;
-
-            // Load Leaderboard
-            loadLeaderboard();
-        } catch (err) {
-            console.error('Error loading dashboard statistics:', err);
+    function addToHistory(record) {
+        let history = getHistory();
+        record.id = Date.now();
+        record.timestamp = new Date().toISOString();
+        history.unshift(record);
+        if (history.length > 30) {
+            history.pop();
         }
+        saveHistory(history);
+    }
+
+    // Dashboard Data loading from local history
+    function loadDashboardStats() {
+        const history = getHistory();
+        const total = history.length;
+        
+        let totalScore = 0;
+        let highCount = 0;
+        let warnCount = 0;
+        let safeCount = 0;
+        
+        history.forEach(item => {
+            totalScore += item.score;
+            if (item.classification === 'HIGH RISK') highCount++;
+            else if (item.classification === 'WARNING') warnCount++;
+            else safeCount++;
+        });
+        
+        const avgScore = total > 0 ? Math.round(totalScore / total) : 0;
+        
+        document.getElementById('stat-total').textContent = total;
+        document.getElementById('stat-avg-score').textContent = `${avgScore}%`;
+        document.getElementById('stat-high-risk').textContent = highCount;
+        document.getElementById('stat-safe-warning').textContent = `${safeCount} / ${warnCount}`;
+
+        // Calculate heights for threat distribution bar charts
+        const highPct = total > 0 ? (highCount / total) * 100 : 0;
+        const warnPct = total > 0 ? (warnCount / total) * 100 : 0;
+        const safePct = total > 0 ? (safeCount / total) * 100 : 0;
+
+        document.getElementById('bar-high').style.height = `${Math.max(highPct, 5)}%`;
+        document.getElementById('bar-warn').style.height = `${Math.max(warnPct, 5)}%`;
+        document.getElementById('bar-safe').style.height = `${Math.max(safePct, 5)}%`;
+
+        // Load Leaderboard (remains global)
+        loadLeaderboard();
     }
 
     async function loadLeaderboard() {
@@ -170,6 +200,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const report = await response.json();
+            report.original_body = payload.body;
+            addToHistory(report);
             renderAnalysisReport(report);
             loadDashboardStats();
         } catch (err) {
@@ -232,83 +264,81 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsPlaceholder.classList.remove('hidden');
     });
 
-    // History Log loading
+    // History Log loading from local storage
     const historyTableBody = document.getElementById('history-table-body');
     const emptyHistoryState = document.getElementById('empty-history-state');
 
-    async function loadHistoryTable() {
-        try {
-            const response = await fetch('/api/history');
-            const history = await response.json();
-            
-            if (history.length === 0) {
-                historyTableBody.innerHTML = '';
-                emptyHistoryState.classList.remove('hidden');
-                return;
-            }
-
-            emptyHistoryState.classList.add('hidden');
-            historyTableBody.innerHTML = history.map(row => {
-                const dateObj = new Date(row.timestamp);
-                const localDateStr = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                
-                let badgeClass = 'safe';
-                if (row.classification === 'HIGH RISK') badgeClass = 'high risk';
-                else if (row.classification === 'WARNING') badgeClass = 'warning';
-
-                return `
-                    <tr>
-                        <td>${localDateStr}</td>
-                        <td class="history-sender" title="${escapeHtml(row.sender)}">${escapeHtml(row.sender)}</td>
-                        <td class="history-subject" title="${escapeHtml(row.subject)}">${escapeHtml(row.subject)}</td>
-                        <td class="history-score-val">${row.score}%</td>
-                        <td><span class="history-badge ${badgeClass}">${row.classification}</span></td>
-                        <td>
-                            <button class="btn btn-secondary inspect-history-btn" data-id="${row.id}">Inspect</button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-
-            // Add Click listeners for inspection buttons
-            document.querySelectorAll('.inspect-history-btn').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    const id = btn.getAttribute('data-id');
-                    await inspectHistoryRecord(id);
-                });
-            });
-
-        } catch (err) {
-            historyTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--accent-red);">Failed to retrieve history.</td></tr>';
+    function loadHistoryTable() {
+        const history = getHistory();
+        
+        if (history.length === 0) {
+            historyTableBody.innerHTML = '';
+            emptyHistoryState.classList.remove('hidden');
+            return;
         }
+
+        emptyHistoryState.classList.add('hidden');
+        historyTableBody.innerHTML = history.map(row => {
+            const dateObj = new Date(row.timestamp);
+            const localDateStr = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            let badgeClass = 'safe';
+            if (row.classification === 'HIGH RISK') badgeClass = 'high risk';
+            else if (row.classification === 'WARNING') badgeClass = 'warning';
+
+            return `
+                <tr>
+                    <td>${localDateStr}</td>
+                    <td class="history-sender" title="${escapeHtml(row.sender)}">${escapeHtml(row.sender)}</td>
+                    <td class="history-subject" title="${escapeHtml(row.subject)}">${escapeHtml(row.subject)}</td>
+                    <td class="history-score-val">${row.score}%</td>
+                    <td><span class="history-badge ${badgeClass}">${row.classification}</span></td>
+                    <td>
+                        <button class="btn btn-secondary inspect-history-btn" data-id="${row.id}">Inspect</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        // Add Click listeners for inspection buttons
+        document.querySelectorAll('.inspect-history-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                inspectHistoryRecord(id);
+            });
+        });
     }
 
-    async function inspectHistoryRecord(id) {
-        try {
-            const response = await fetch(`/api/history/${id}`);
-            if (!response.ok) {
-                throw new Error('Could not retrieve record detail.');
-            }
-            const data = await response.json();
-            
-            // Populate form input boxes
-            senderInput.value = data.sender;
-            subjectInput.value = data.subject;
-            attachmentsInput.value = ''; // Reset attachments
-            bodyInput.value = data.original_body;
-
-            // Render details
-            renderAnalysisReport(data);
-
-            // Navigate view
-            switchView('analyze');
-
-        } catch (err) {
-            alert(err.message);
+    function inspectHistoryRecord(id) {
+        const history = getHistory();
+        const record = history.find(item => item.id == id);
+        if (!record) {
+            alert('Record not found.');
+            return;
         }
+        
+        // Populate form input boxes
+        senderInput.value = record.sender;
+        subjectInput.value = record.subject;
+        attachmentsInput.value = ''; // Reset attachments
+        bodyInput.value = record.original_body;
+
+        // Render details
+        renderAnalysisReport(record);
+
+        // Navigate view
+        switchView('analyze');
     }
 
     document.getElementById('refresh-history-btn').addEventListener('click', loadHistoryTable);
+    
+    document.getElementById('clear-history-btn').addEventListener('click', () => {
+        if (confirm('Are you sure you want to clear all local scan logs?')) {
+            saveHistory([]);
+            loadHistoryTable();
+            loadDashboardStats();
+        }
+    });
 
     // --- Interactive Cybersecurity Awareness Quiz Engine ---
     const quizQuestions = [

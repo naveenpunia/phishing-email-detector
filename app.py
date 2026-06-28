@@ -359,16 +359,7 @@ def analyze_email():
 
     report = analyze_email_details(subject, sender, body, attachments)
     
-    # Save the scan
-    database.save_scan(
-        subject=report['subject'],
-        sender=report['sender'],
-        body=body,
-        score=report['score'],
-        classification=report['classification'],
-        flags=report['findings']
-    )
-    
+    # Return report directly (history is stored device-based client-side)
     return jsonify(report)
 
 @app.route('/api/history', methods=['GET'])
