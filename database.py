@@ -4,6 +4,20 @@ import os
 
 DB_PATH = os.path.join(os.path.dirname(__file__), 'phishing_detector.db')
 
+# Initial seed data for the threat intelligence database
+SEED_THREATS = [
+    ('Domain', 'paypal-security-updates.com', 'CRITICAL'),
+    ('Domain', 'netflix-billing-alert.info', 'HIGH'),
+    ('Domain', 'chase-cards-verification.xyz', 'CRITICAL'),
+    ('Domain', 'verify-apple-login.support', 'HIGH'),
+    ('Domain', 'wells-fargo-active.net', 'CRITICAL'),
+    ('Domain', 'google-drive-invoice.security-checks.top', 'CRITICAL'),
+    ('Domain', 'microsoft-outlook-inbox.site', 'HIGH'),
+    ('Email', 'netflix-alerts@gmail.com', 'HIGH'),
+    ('Email', 'support-paypal@yahoo.com', 'HIGH'),
+    ('Keyword', 'immediate bank credential reset request', 'CRITICAL')
+]
+
 def get_db_connection():
     """Establishes and returns a connection to the SQLite database."""
     conn = sqlite3.connect(DB_PATH)
@@ -11,7 +25,7 @@ def get_db_connection():
     return conn
 
 def init_db():
-    """Initializes the database schema if it doesn't already exist."""
+    """Initializes the database schema and seeds initial threat intelligence records."""
     conn = get_db_connection()
     cursor = conn.cursor()
     
@@ -39,7 +53,26 @@ def init_db():
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+
+    # Create threat intelligence table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS threat_intelligence (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            type TEXT NOT NULL,
+            value TEXT NOT NULL UNIQUE,
+            severity TEXT NOT NULL,
+            date_added DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
     
+    # Seed initial threat data if empty
+    cursor.execute('SELECT COUNT(*) FROM threat_intelligence')
+    if cursor.fetchone()[0] == 0:
+        cursor.executemany('''
+            INSERT INTO threat_intelligence (type, value, severity)
+            VALUES (?, ?, ?)
+        ''', SEED_THREATS)
+        
     conn.commit()
     conn.close()
 
@@ -101,11 +134,10 @@ def get_scan_detail(scan_id):
     return None
 
 def get_stats():
-    """Calculates aggregate statistics for the dashboard dashboard."""
+    """Calculates aggregate statistics for the dashboard."""
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Total scans
     cursor.execute('SELECT COUNT(*) FROM scans')
     total_scans = cursor.fetchone()[0]
     
@@ -120,11 +152,9 @@ def get_stats():
             'recent_activity': []
         }
         
-    # Average score
     cursor.execute('SELECT AVG(score) FROM scans')
     avg_score = round(cursor.fetchone()[0], 1)
     
-    # Classification counts
     cursor.execute("SELECT COUNT(*) FROM scans WHERE classification = 'HIGH RISK'")
     high_risk = cursor.fetchone()[0]
     
@@ -134,8 +164,6 @@ def get_stats():
     cursor.execute("SELECT COUNT(*) FROM scans WHERE classification = 'SAFE'")
     safe = cursor.fetchone()[0]
     
-    # Get last 7 days scanning trend (mock dates or real sqlite groupings)
-    # We will get counts grouped by date for the trend graph
     cursor.execute('''
         SELECT DATE(timestamp) as scan_date, COUNT(*) as count, AVG(score) as score
         FROM scans
@@ -190,6 +218,39 @@ def get_leaderboard(limit=10):
             'timestamp': row['timestamp']
         })
     return leaderboard
+
+def get_threats():
+    """Retrieves all registered threat intelligence blacklist indicators."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT type, value, severity, date_added FROM threat_intelligence ORDER BY date_added DESC')
+    rows = cursor.fetchall()
+    conn.close()
+    
+    threats = []
+    for row in rows:
+        threats.append({
+            'type': row['type'],
+            'value': row['value'],
+            'severity': row['severity'],
+            'date_added': row['date_added']
+        })
+    return threats
+
+def check_blacklist(value):
+    """
+    Checks if a given domain or email matches any value in the blacklist database.
+    Supports basic string presence check.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT severity, type FROM threat_intelligence WHERE ? LIKE "%" || value || "%" OR value LIKE "%" || ? || "%"', (value.lower(), value.lower()))
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row:
+        return {'matched': True, 'severity': row['severity'], 'type': row['type']}
+    return {'matched': False}
 
 # Initialize database tables on module import
 init_db()

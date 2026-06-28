@@ -1123,7 +1123,7 @@ mark.flag-grammar {
         justify-content: center;
     }
     
-    .brand-text { display: none; }
+    .brand-text, .brand-subtext, .brand-info { display: none; }
     
     .nav-item {
         padding: 12px;

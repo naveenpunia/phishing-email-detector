@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'analyze': { title: 'Threat Analyzer', subtitle: 'Scan email parameters for security indicators' },
         'history': { title: 'History Log', subtitle: 'Review previously analyzed emails and alerts' },
         'quiz': { title: 'Awareness Quiz', subtitle: 'Test your phishing identification skills' },
+        'database': { title: 'Threat Intelligence', subtitle: 'Known malicious sender addresses and spoofing domains' },
         'awareness': { title: 'Security Guides', subtitle: 'Learn how to identify email fraud patterns' }
     };
 
@@ -61,6 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
             loadDashboardStats();
         } else if (viewName === 'history') {
             loadHistoryTable();
+        } else if (viewName === 'database') {
+            loadThreatsTable();
         }
     }
 
@@ -612,6 +615,70 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         return text.replace(/[&<>"']/g, m => map[m]);
     }
+
+    // Threat Intelligence Database Logic
+    let threatsList = [];
+    const threatsTableBody = document.getElementById('threats-table-body');
+    const emptyThreatsState = document.getElementById('empty-threats-state');
+    const threatsCountBadge = document.getElementById('threats-count-badge');
+    const threatSearchInput = document.getElementById('threat-db-search');
+
+    async function loadThreatsTable() {
+        try {
+            const response = await fetch('/api/threats');
+            threatsList = await response.json();
+            renderThreats(threatsList);
+        } catch (err) {
+            console.error('Error loading threats:', err);
+            threatsTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--accent-red);">Failed to retrieve threat database.</td></tr>';
+        }
+    }
+
+    function renderThreats(list) {
+        threatsCountBadge.textContent = `${list.length} Indicators`;
+        
+        if (list.length === 0) {
+            threatsTableBody.innerHTML = '';
+            emptyThreatsState.classList.remove('hidden');
+            return;
+        }
+
+        emptyThreatsState.classList.add('hidden');
+        threatsTableBody.innerHTML = list.map(item => {
+            const dateObj = new Date(item.date_added);
+            const localDateStr = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            let severityClass = 'safe';
+            if (item.severity === 'CRITICAL') severityClass = 'high risk';
+            else if (item.severity === 'HIGH') severityClass = 'warning';
+
+            return `
+                <tr>
+                    <td><span class="badge-type" style="text-transform: uppercase; font-size: 11px; font-weight: 700; color: var(--text-secondary);">${escapeHtml(item.type)}</span></td>
+                    <td style="font-family: monospace; font-size: 14px; word-break: break-all;">${escapeHtml(item.value)}</td>
+                    <td><span class="history-badge ${severityClass}">${escapeHtml(item.severity)}</span></td>
+                    <td>${localDateStr}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    // Real-time search filtering
+    threatSearchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        if (!query) {
+            renderThreats(threatsList);
+            return;
+        }
+        
+        const filtered = threatsList.filter(item => {
+            return item.value.toLowerCase().includes(query) || 
+                   item.type.toLowerCase().includes(query) ||
+                   item.severity.toLowerCase().includes(query);
+        });
+        
+        renderThreats(filtered);
+    });
 
     // Initialize Dashboard data on page load
     loadDashboardStats();

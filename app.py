@@ -171,6 +171,27 @@ def analyze_email_details(subject, sender, body, attachments):
     heuristic_score = 0
     analysis_findings = []
     
+    # --- 0. THREAT INTELLIGENCE BLACKLIST CROSS-REFERENCING ---
+    sender_blacklist = database.check_blacklist(sender)
+    if sender_blacklist['matched']:
+        heuristic_score = 100
+        analysis_findings.append({
+            'category': 'Threat Blacklist',
+            'severity': 'high',
+            'message': f"CRITICAL: Sender address matches blacklisted threat indicator: {sender}"
+        })
+        
+    urls = extract_urls(body)
+    for url in urls:
+        url_blacklist = database.check_blacklist(url)
+        if url_blacklist['matched']:
+            heuristic_score = 100
+            analysis_findings.append({
+                'category': 'Threat Blacklist',
+                'severity': 'high',
+                'message': f"CRITICAL: Contains link matching blacklisted threat indicator: {url}"
+            })
+            
     # --- 1. SENDER DOMAIN DIAGNOSTICS (WHOIS & SPF) ---
     domain_report = domain_verifier.analyze_domain(sender)
     
@@ -412,6 +433,11 @@ def submit_quiz_score():
 def get_leaderboard_api():
     leaderboard = database.get_leaderboard(limit=10)
     return jsonify(leaderboard)
+
+@app.route('/api/threats', methods=['GET'])
+def get_threats_api():
+    threats = database.get_threats()
+    return jsonify(threats)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
