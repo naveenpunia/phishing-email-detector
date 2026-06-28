@@ -204,8 +204,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
     });
 
+    // Clear custom validation errors on type
+    senderInput.addEventListener('input', () => {
+        senderInput.setCustomValidity('');
+    });
+
     analyzeForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+
+        const sender = senderInput.value.trim();
+        const emailRegex = /[\w\.-]+@[\w\.-]+\.\w+/;
+        if (!emailRegex.test(sender)) {
+            senderInput.setCustomValidity('Please include a valid email address (e.g. user@domain.com or Brand <user@domain.com>).');
+            senderInput.reportValidity();
+            return;
+        }
 
         // Loading states
         analyzeSubmitBtn.disabled = true;

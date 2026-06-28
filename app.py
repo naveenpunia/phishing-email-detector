@@ -357,6 +357,11 @@ def analyze_email():
     if not subject or not sender or not body:
         return jsonify({'error': 'Subject, Sender, and Email Body are all required.'}), 400
 
+    # Validate that sender contains a valid email address format
+    email_match = re.search(r'[\w\.-]+@[\w\.-]+\.\w+', sender)
+    if not email_match:
+        return jsonify({'error': 'Invalid sender details. Please include a valid email address (e.g. sender@domain.com or Brand <sender@domain.com>).'}), 400
+
     report = analyze_email_details(subject, sender, body, attachments)
     
     # Return report directly (history is stored device-based client-side)
